@@ -1,7 +1,20 @@
 {
+  "model_name": "Toko Online",
+  "version": "1.0",
+  "domains": [
+    {
+      "name": "UserOrder",
+      "description": "Sistem Order Produk"
+    },
+    {
+      "name": "UserPayment",
+      "description": "Sistem Pembawayan Order"
+    }
+  ],
   "classes": [
     {
       "name": "Customer",
+      "domain_ref": "UserOrder",
       "attributes": [
         {"name": "id", "type": "int"},
         {"name": "name", "type": "str"},

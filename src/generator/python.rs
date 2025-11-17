@@ -20,19 +20,36 @@ pub fn generate(model: &Model, out_dir: &Path) -> Result<()> {
 
     let mut combined = String::new();
 
+    // HEADER
+    let mut ctx_header = Context::new();
+    ctx_header.insert("model_name", &model.model_name);
+    ctx_header.insert("version", &model.version);
+
+    combined.push_str(&tera.render("header.py.tera", &ctx_header)?);
+    combined.push_str("\n");
+
+    // RENDER CLASS PER CLASS
     for cls in &model.classes {
         let mut ctx = Context::new();
         ctx.insert("class", &cls);
-
-        // Gunakan nama template sesuai file (misalnya class.py.tera)
-        let rendered = tera.render("class.py.tera", &ctx)
-            .with_context(|| format!("failed to render template for class {}", cls.name))?;
+        let rendered = tera.render("class.py.tera", &ctx)?;
         combined.push_str(&rendered);
         combined.push_str("\n\n");
     }
 
+    // FOOTER
+    combined.push_str(&tera.render("footer.py.tera", &Context::new())?);
+
+
     // Tulis hasil gabungan ke satu file
-    let out_path = out_dir.join("model.py");
+    let safe_name: String = model.model_name
+    .chars()
+    .map(|c| if c.is_alphanumeric() { c } else { '_' })
+    .collect();
+
+    let filename = format!("{}_model.py", safe_name);
+    let out_path = out_dir.join(filename);
+
     fs::write(&out_path, combined)
         .with_context(|| format!("Failed to write Python output to {:?}", out_path))?;
     Ok(())

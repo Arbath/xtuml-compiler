@@ -1,23 +1,26 @@
-{# Template sederhana untuk kelas Python #}
 class {{ class.name }}:
-    def __init__(self{% if class.attributes | length > 0 %}, {% for a in class.attributes %}{{ a.name }}: {{ a.type }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}):
-{% if class.attributes | length == 0 %}
+    def __init__(self{% if class.attributes | length > 0 -%}
+        {%- for a in class.attributes %}, {{ a.name }}: {{ a.type }}{%- endfor -%}
+    {%- endif %}):
+    {%- if class.attributes | length == 0 %}
         pass
-{% else %}
-{% for a in class.attributes %}
+    {%- else %}
+        {%- for a in class.attributes %}
         self.{{ a.name }} = {{ a.name }}
-{% endfor %}
-{% endif %}
+        {%- endfor %}
+    {%- endif %}
 
-{% if class.methods %}
-{% for m in class.methods %}
+{%- if class.methods %}
+{%- for m in class.methods %}
+
     def {{ m.name }}(self):
-{% if m.body | trim != "" %}
-{% for line in m.body | split(pat="\n") %}
+    {%- if m.body | trim != "" %}
+        {%- for line in m.body | trim | split(pat="\n") %}
         {{ line }}
-{% endfor %}
-{% else %}
+        {%- endfor %}
+    {%- else %}
         pass
-{% endif %}
-{% endfor %}
-{% endif %}
+    {%- endif %}
+
+{%- endfor %}
+{%- endif %}

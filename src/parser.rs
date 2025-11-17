@@ -6,6 +6,10 @@ use anyhow::{Result, Context};
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Model {
     #[serde(default)]
+    pub model_name: String,
+    #[serde(default)]
+    pub version: String,
+    #[serde(default)]
     pub classes: Vec<ClassDef>,
     #[serde(default)]
     pub events: Vec<EventDef>,
