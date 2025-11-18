@@ -17,6 +17,13 @@ pub fn generate(model: &Model, out_dir: &Path) -> Result<()> {
     }
 
     let mut combined = String::new();
+
+    let mut ctx_header = Context::new();
+    ctx_header.insert("model_name", &model.model_name);
+    ctx_header.insert("version", &model.version);
+    combined.push_str(&tera.render("header.js.tera", &ctx_header)?);
+    combined.push_str("\n");
+
     for cls in &model.classes {
         let mut ctx = Context::new();
         ctx.insert("class", &cls);
@@ -24,7 +31,16 @@ pub fn generate(model: &Model, out_dir: &Path) -> Result<()> {
         combined.push_str("\n\n");
     }
 
-    let out_path = out_dir.join("model.js");
+    combined.push_str(&tera.render("footer.js.tera", &Context::new())?);
+
+    let safe_name: String = model.model_name
+        .chars()
+        .map(|c| if c.is_alphanumeric() { c } else { '_' })
+        .collect();
+
+    let filename = format!("{}_model.js", safe_name);
+    let out_path = out_dir.join(filename);
+    
     fs::write(&out_path, combined)
         .with_context(|| format!("Failed to write Javascript output to {:?}", out_path))?;
     Ok(())

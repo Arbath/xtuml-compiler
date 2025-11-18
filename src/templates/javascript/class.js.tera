@@ -1,4 +1,3 @@
-// Auto-generated from xtUML model
 export class {{ class.name }} {
     constructor({% if class.attributes | length > 0 %}{% for a in class.attributes %}{{ a.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}) {
         {% if class.attributes | length == 0 %}
