@@ -112,6 +112,10 @@
         {
           "name": "increment_stock",
           "body": "this.stock_level += amount;"
+        },
+        {
+          "name": "send_error_notification",
+          "body": "// select user where user equal to user"
         }
       ]
     }
@@ -122,6 +126,6 @@
     { "name": "OrderShipped", "trigger": "Order", "action": "notify_customer_shipping()" },
     { "name": "ProductPriceChanged", "trigger": "Product", "action": "notify_wishlist_users()" },
     { "name": "LowStockWarning", "trigger": "Inventory", "action": "create_purchase_order()" },
-    { "name": "OutOfStockError", "trigger": "Inventory", "action": "notify_sales_team()" }
+    { "name": "OutOfStockError", "trigger": "Inventory", "action": "notify_sales_team(), send_error_notification()" }
   ]
 }

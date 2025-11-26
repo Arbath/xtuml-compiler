@@ -18,8 +18,8 @@ struct Args {
     #[arg(short, long, default_value = "output/generated_code")]
     out: PathBuf,
 
-    /// Target language (only "python" implemented in sample)
-    #[arg(short, long, default_value = "python")]
+    /// Target language (only "javascript" implemented in sample)
+    #[arg(short, long, default_value = "javascript")]
     lang: String,
 }
 
@@ -61,7 +61,7 @@ fn main() -> Result<()> {
 
     let filename = format!("{}_model.{}", safe_name, ext);
 
-    println!("Generation complete. \nOutput in: \n./{}/{}", args.out.display(), filename);
+    println!("Generation complete. \nOutput in: \n{}/{}", args.out.display(), filename);
     Ok(())
 }
 
