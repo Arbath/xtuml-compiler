@@ -35,17 +35,18 @@ xtuml-compiler/
 │   └── example_model.json  → Contoh model xtUML dalam format JSON
 │
 └── output/
-└── generated_code/         → Hasil kode sumber yang dihasilkan oleh compiler
+    └── generated_code/         → Hasil kode sumber yang dihasilkan oleh compiler
 
 ````
 
 ---
 
 ## Cara Menjalankan
+Gunakan file binary yang telah disedikan di github release atau jalankan sendiri di komputer anda.
 
 ### 1. Clone repository
 ```bash
-git clone https://github.com/ArbathAbdurrahman/xtuml-compiler.git
+git clone https://github.com/Arbath/xtuml-compiler.git
 cd xtuml-compiler
 ````
 
@@ -127,44 +128,9 @@ Compiler ini berperan sebagai *bridge* antara model xtUML (abstrak) dan kode imp
 
 ---
 
-## Contoh Format Model JSON
+### [Contoh Format Model JSON](/models/example_model.json)
 
-```json
-{
-  "classes": [
-    {
-      "name": "Order",
-      "attributes": [
-        {"name": "id", "type": "int"},
-        {"name": "status", "type": "string"}
-      ],
-      "states": [
-        {"name": "Pending"},
-        {"name": "Confirmed"},
-        {"name": "Shipped"}
-      ]
-    }
-  ],
-  "events": [
-    {"name": "OrderConfirmed", "trigger": "Order", "action": "status = 'confirmed'"}
-  ]
-}
-```
-
----
-
-## Contoh Output (Java)
-
-```java
-public class Order {
-    private int id;
-    private String status;
-
-    public void confirmOrder() {
-        this.status = "confirmed";
-    }
-}
-```
+### [Contoh Hasil Compile Javascript](/models/Toko_Online_model.js)
 
 ---
 
@@ -175,7 +141,7 @@ public class Order {
 | 1     | Struktur dasar proyek & parser JSON       | Selesai                |
 | 2     | Analisis semantik model                   | Selesai                |
 | 3     | Generator kode Python / Java / Javascript | Selesai                |
-| 4     | Validasi event & state machine            | Rencana berikutnya     |
+| 4     | Validasi event & state machine            | Selesai                |
 | 5     | Integrasi WebAssembly (xtUML web IDE)     | Rencana jangka panjang |
 
 ---
