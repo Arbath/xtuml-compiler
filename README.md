@@ -128,9 +128,9 @@ Compiler ini berperan sebagai *bridge* antara model xtUML (abstrak) dan kode imp
 
 ---
 
-### [Contoh Format Model JSON](/models/example_model.json)
+### [Format Model JSON](/models/example_model.json)
 
-### [Contoh Hasil Compile Javascript](/models/Toko_Online_model.js)
+### [Hasil Compile Javascript](https://cdn.teknohole.com/995702694/arbath/Toko_Online_model.js)
 
 ---
 
