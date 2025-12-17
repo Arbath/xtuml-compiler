@@ -1,0 +1,12 @@
+{%- if class.state_model is defined and class.state_model -%}
+{% set sm = class.state_model[0] %}
+/* =========================
+   STATE ENUM FOR {{ class.name }}
+   ========================= */
+const {{ class.name }}State = Object.freeze({
+{%- for s in sm.states %}
+    {{ s.name }}: "{{ s.name }}"{% if not loop.last %},{% endif -%}
+{% endfor %}
+});
+
+{% endif %}

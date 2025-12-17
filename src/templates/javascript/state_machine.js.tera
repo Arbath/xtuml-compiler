@@ -1,0 +1,38 @@
+{%- if class.state_model is defined and class.state_model %}
+
+    /* =========================
+       STATE MACHINE
+       ========================= */
+
+{% set sm = class.state_model[0] %}
+{%- for tr in sm.transitions %}
+    {{ tr.event }}() {
+        switch (this._state) {
+            case {{ class.name }}State.{{ tr.from }}:
+                this._enter{{ tr.to }}();
+                break;
+            default:
+                this._invalidTransition("{{ tr.event }}");
+        }
+    }
+{% endfor -%}
+{%- for st in sm.states %}
+    _enter{{ st.name }}() {
+{%- for tr in sm.transitions %}
+{%- if tr.to == st.name and tr.action is defined %}
+        this.{{ tr.action | replace(from="()", to="") }}();
+{%- endif -%}
+{% endfor %}
+        this._state = {{ class.name }}State.{{ st.name }};
+    }
+{% endfor %}
+    get state() {
+        return this._state;
+    }
+
+    _invalidTransition(event) {
+        throw new Error(
+            `Invalid event ${event} in state ${this._state}`
+        );
+    }
+{% endif %}

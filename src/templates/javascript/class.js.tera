@@ -1,4 +1,8 @@
+{%- include "state.js.tera" -%}
 export class {{ class.name }} {
+    {%- if class.domain_ref is defined and class.domain_ref %}
+    // Domain Reference: {{ class.domain_ref }}
+    {% endif %}
     constructor({% if class.attributes | length > 0 %}{% for a in class.attributes %}{{ a.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}) {
         {%- if class.attributes | length == 0 %}
         // no attributes
@@ -6,6 +10,10 @@ export class {{ class.name }} {
         {%- for a in class.attributes %}
         this.{{ a.name }} = {{ a.name }};
         {%- endfor %}
+        {%- endif %}
+        {%- if class.state_model is defined and class.state_model %}
+        {%- set sm = class.state_model[0] %}
+        this._state = {{ class.name }}State.{{ sm.initial_state }};
         {%- endif %}
     }
     {% if class.methods -%}
@@ -21,10 +29,9 @@ export class {{ class.name }} {
     }
     {% endfor -%}
     {% endif %}
-    {%- set evs = class_events -%}
-
-{% for ev in evs %}
+{%- include "state_machine.js.tera" -%}
+{%- set evs = class_events -%}
+{%- for ev in evs %}
     // Event: {{ ev.name }} -> {{ ev.action }}
-{% endfor %}
-
+{%- endfor %}
 }

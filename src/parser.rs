@@ -19,11 +19,15 @@ pub struct Model {
 pub struct ClassDef {
     pub name: String,
     #[serde(default)]
+    pub domain_ref: String,
+    #[serde(default)]
     pub attributes: Vec<Attribute>,
     #[serde(default)]
     pub states: Vec<StateDef>,
     #[serde(default)]
     pub methods: Vec<MethodDef>,
+    #[serde(default)]
+    pub state_model: Option<Vec<StateModel>>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -52,6 +56,27 @@ pub struct EventDef {
     #[serde(default)]
     pub action: String,
 }
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct StateModel {
+    pub initial_state: String,
+    pub states: Vec<State>,
+    pub transitions: Vec<Transition>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct State {
+    pub name: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Transition {
+    pub from: String,
+    pub event: String,
+    pub to: String,
+    pub action: Option<String>,
+}
+
 
 pub fn load_model<P: AsRef<Path>>(path: P) -> Result<Model> {
     let s = fs::read_to_string(&path)
