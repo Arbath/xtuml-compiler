@@ -1,0 +1,302 @@
+{
+  "model_name": "SPP Payment System",
+  "version": "1.0",
+  "domains": [
+    {
+      "name": "userManagement",
+      "description": "Sistem untuk mengelola data dan aktivitas pengguna."
+    },
+    {
+      "name": "penangananTagihan",
+      "description": "Sistem untuk mengelola tagihan dan proses pembayaran SPP."
+    },
+    {
+      "name": "administrasiKeuangan",
+      "description": "Sistem untuk mengarsip aktivitas dan transaksi pengguna."
+    }
+  ],
+  "classes": [
+    {
+      "name": "User",
+      "domain_ref": "userManagement",
+      "description": "Class untuk pengguna sistem",
+      "attributes": [
+        {"name": "userID", "type": "int"},
+        {"name": "username", "type": "str"},
+        {"name": "email", "type": "str"},
+        {"name": "passwordHash", "type": "str"},
+        {"name": "role", "type": "str"}
+      ]
+    },
+    {
+      "name": "Permission",
+      "domain_ref": "userManagement",
+      "description": "Hak akses pengguna",
+      "attributes": [
+        {"name": "permissionID", "type": "int"},
+        {"name": "permissionName", "type": "str"},
+        {"name": "description", "type": "str"}
+      ]
+    },
+    {
+      "name": "AuthSession",
+      "domain_ref": "userManagement",
+      "attributes": [
+        {"name": "sessionID", "type": "int"},
+        {"name": "userID", "type": "int"},
+        {"name": "token", "type": "str"},
+        {"name": "expiredAt", "type": "datetime"},
+        {"name": "sessionState", "type": "str"}
+      ],
+      "state_model": [
+        {
+          "initial_state": "LoggedOut",
+          "states": [
+            {"name": "LoggedOut"},
+            {"name": "LoggingIn"},
+            {"name": "LoggedIn"},
+            {"name": "Expired"}
+          ],
+          "transitions": [
+            {"from": "LoggedOut", "to": "LoggingIn", "event": "attemptLogin", "action": "validateCredentials()"},
+            {"from": "LoggingIn", "to": "LoggedIn", "event": "loginSuccess", "action": "createSession()"},
+            {"from": "LoggingIn", "to": "LoggedOut", "event": "sessionEnd", "action": "deleteSession()"},
+            {"from": "LoggingIn", "to": "Expired", "event": "sessionExpired", "action": "refreshSession()"},
+            {"from": "LoggedIn", "to": "LoggingIn", "event": "attemptLogin", "action": "validateCredentials()"},
+            {"from": "LoggedIn", "to": "LoggedIn", "event": "logginSuccess", "action": "createSession()"},
+            {"from": "LoggedIn", "to": "Expired", "event": "sessionExpired", "action": "refreshSession()"},
+            {"from": "LoggedIn", "to": "LoggedOut", "event": "sessionEnd", "action": "deleteSession()"},
+            {"from": "Expired", "to": "LoggingIn", "event": "attemptLogin", "action": "validateCredentials()"},
+            {"from": "Expired", "to": "LoggedIn", "event": "loginSuccess", "action": "createSession()"},
+            {"from": "Expired", "to": "LoggedOut", "event": "sessionEnd", "action": "deleteSession()"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ResetPassword",
+      "domain_ref": "userManagement",
+      "attributes": [
+        {"name": "resetID", "type": "int"},
+        {"name": "userID", "type": "int"},
+        {"name": "resetToken", "type": "str"},
+        {"name": "createdAt", "type": "datetime"},
+        {"name": "expiredAt", "type": "datetime"}
+      ]
+    },
+    {
+      "name": "Tagihan",
+      "domain_ref": "penangananTagihan",
+      "attributes": [
+        {"name": "tagihanID", "type": "int"},
+        {"name": "userID", "type": "int"},
+        {"name": "periode", "type": "datetime"},
+        {"name": "nominalTagihan", "type": "float"},
+        {"name": "jumlahTerbayar", "type": "float"},
+        {"name": "denda", "type": "float"},
+        {"name": "statusTagihan", "type": "str"},
+        {"name": "createdAt", "type": "datetime"},
+        {"name": "tanggalJatuhTempo", "type": "datetime"}
+      ],
+      "state_model": [
+        {
+          "initial_state": "Publish",
+          "states": [
+            {"name": "Publish"},
+            {"name": "Outstansing"},
+            {"name": "Lunas"},
+            {"name": "Terlambat"},
+            {"name": "Clear"}
+          ],
+          "transitions": [
+            {"from": "Publish", "to": "Lunas", "event": "payFull", "action": "closeInvoice()"},
+            {"from": "Publish", "to": "Terlambat", "event": "markAsLate", "action": "calculatePenalty()"},
+            {"from": "Publish", "to": "Clear", "event": "withdrawn", "action": "clearInvoice()"},
+            {"from": "Publish", "to": "Outstanding", "event": "payPartial", "action": "calculateRemain()"},
+            {"from": "Outstanding", "to": "Lunas", "event": "payFull", "action": "closeInvoice()"},
+            {"from": "Outstanding", "to": "Terlambat", "event": "markAsLate", "action": "saveRemain()"},
+            {"from": "Outstanding", "to": "Clear", "event": "withdrawn", "action": "clearInvoice()"},
+            {"from": "Outstanding", "to": "Outstanding", "event": "payPartial", "action": "calculateRemain()"},
+            {"from": "Lunas", "to": "Clear", "event": "withdrawn", "action": "clearInvoice()"},
+            {"from": "Terlambat", "to": "Lunas", "event": "payFull", "action": "closeInvoice()"},
+            {"from": "Terlambat", "to": "Clear", "event": "withdrawn", "action": "clearInvoice()"},
+            {"from": "Terlambat", "to": "Terlambat", "event": "payPartial", "action": "calculatePenalty()"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pembayaran",
+      "domain_ref": "penangananTagihan",
+      "attributes": [
+        {"name": "pembayaranID", "type": "int"},
+        {"name": "gatewayID", "type": "int"},
+        {"name": "tagihanID", "type": "int"},
+        {"name": "userID", "type": "int"},
+        {"name": "jumlahBayar", "type": "float"},
+        {"name": "tanggalBayar", "type": "datetime"},
+        {"name": "statusPembayaran", "type": "str"}
+      ],
+      "state_model": [
+        {
+          "initial_state": "Draft",
+          "states": [
+            {"name": "Draft"},
+            {"name": "Waiting"},
+            {"name": "Berhasil"},
+            {"name": "Gagal"},
+            {"name": "Cancel"},
+            {"name": "Timeout"}
+          ],
+          "transitions": [
+            {"from": "Draft", "to": "Waiting", "event": "initiatePay","action": "None"},
+            {"from": "Draft", "to": "Draft", "event": "reSubmit", "action": "createPayment()"},
+            {"from": "Waiting", "to": "Gagal", "event": "verifyFail", "action": "destroyPayment()"},
+            {"from": "Waiting", "to": "Berhasil", "event": "verifySuccess", "action": "endPayment()"},
+            {"from": "Waiting", "to": "Cancel", "event": "closePay", "action": "None"},
+            {"from": "Waiting", "to": "Timeout", "event": "terminate","action": "None"},
+            {"from": "Berhasil", "to": "Berhasil", "event": "verifySuccess", "action": "None"},
+            {"from": "Gagal", "to": "Gagal", "event": "verifyFail", "action": "None"},
+            {"from": "Gagal", "to": "Draft", "event": "reSubmit", "action": "createPayment()"},
+            {"from": "Cancel", "to": "Gagal", "event": "verifyFail", "action": "destroyPayment()"},
+            {"from": "Timeout", "to": "Gagal", "event": "verifyFail", "action": "destroyPayment()"}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "GatewayAPI",
+      "domain_ref": "penangananTagihan",
+      "attributes": [
+        {"name": "gatewayID", "type": "int"},
+        {"name": "namaGateway", "type": "str"},
+        {"name": "endpointAPI", "type": "str"},
+        {"name": "apiKey", "type": "str"}
+      ]
+    },
+    {
+      "name": "Beasiswa",
+      "domain_ref": "penangananTagihan",
+      "attributes": [
+        {"name": "beasiswaID", "type": "int"},
+        {"name": "namaBeasiswa", "type": "str"},
+        {"name": "jenisBeasiswa", "type": "str"},
+        {"name": "potonganBeasiswa", "type": "float"},
+        {"name": "periodeBeasiswa", "type": "datetime"},
+        {"name": "jumlahPenerima", "type": "float"}
+      ]
+    },
+    {
+      "name": "Notifikasi",
+      "domain_ref": "penangananTagihan",
+      "attributes": [
+        {"name": "notifikasiID", "type": "int"},
+        {"name": "tagihanID", "type": "int"},
+        {"name": "pembayaranID", "type": "int"},
+        {"name": "pesanNotifikasi", "type": "str"},
+        {"name": "tanggalKirim", "type": "datetime"}
+      ]
+    },
+    {
+      "name": "Rekonsiliasi",
+      "domain_ref": "administrasiKeuangan",
+      "attributes": [
+        {"name": "rekonsiliasiID", "type": "int"},
+        {"name": "pembayaranID", "type": "int"},
+        {"name": "tanggalRekonsiliasi", "type": "datetime"},
+        {"name": "sumberEksternal", "type": "str"},
+        {"name": "keterangan", "type": "str"}
+      ]
+    },
+    {
+      "name": "ArsipTransaksi",
+      "domain_ref": "administrasiKeuangan",
+      "attributes": [
+        {"name": "arsipID", "type": "int"},
+        {"name": "tanggalArsip", "type": "datetime"},
+        {"name": "jumlahBayar", "type": "float"}
+      ]
+    },
+    {
+      "name": "LaporanKeuangan",
+      "domain_ref": "administrasiKeuangan",
+      "attributes": [
+        {"name": "laporanID", "type": "int"},
+        {"name": "arsipID", "type": "int"},
+        {"name": "periode", "type": "datetime"},
+        {"name": "totalPendapatan", "type": "float"},
+        {"name": "totalBeasiswa", "type": "float"},
+        {"name": "totalTransaksi", "type": "float"},
+        {"name": "tanngalCetak", "type": "datetime"},
+        {"name": "disetujuiOleh", "type": "str"}
+      ]
+    },
+    {
+      "name": "LogTransaksi",
+      "domain_ref": "administrasiKeuangan",
+      "attributes": [
+        {"name": "logID", "type": "int"},
+        {"name": "pembayaranID", "type": "int"},
+        {"name": "aksi", "type": "str"},
+        {"name": "timestampAksi", "type": "datetime"}
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "attemptLogin",
+      "trigger": "AuthSession",
+      "action": "validateCredentials()"
+    },
+    {
+      "name": "loginSuccess",
+      "trigger": "AuthSession",
+      "action": "createSession()"
+    },
+    {
+      "name": "sessionExpired",
+      "trigger": "AuthSession",
+      "action": "refreshSession()"
+    },
+    {
+      "name": "sessionEnd",
+      "trigger": "AuthSession",
+      "action": "deleteSession()"
+    },
+    {
+      "name": "payFull",
+      "trigger": "Tagihan",
+      "action": "closeInvoice()"
+    },
+    {
+      "name": "markAsLate",
+      "trigger": "Tagihan",
+      "action": "saveRemain() -> calculatePenalty()"
+    },
+    {
+      "name": "withdrawn",
+      "trigger": "Tagihan",
+      "action": "clearInvoice()"
+    },
+    {
+      "name": "payPartial",
+      "trigger": "Tagihan",
+      "action": "calculateRemain()"
+    },
+    {
+      "name": "reSubmit",
+      "trigger": "Pembayaran",
+      "action": "createPayment()"
+    },
+    {
+      "name": "verifyFail",
+      "trigger": "Pembayaran",
+      "action": "destroyPayment()"
+    },
+    {
+      "name": "verifySuccess",
+      "trigger": "Pembayaran",
+      "action": "endPayment()"
+    }
+  ]
+}

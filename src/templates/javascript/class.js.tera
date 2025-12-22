@@ -3,6 +3,12 @@ export class {{ class.name }} {
     {%- if class.domain_ref is defined and class.domain_ref %}
     // Domain Reference: {{ class.domain_ref }}
     {% endif %}
+    /**
+     * @constructor
+     {%- for a in class.attributes %}
+     * @param { {{ a.type }} } {{ a.name }}
+     {%- endfor %}
+     */
     constructor({% if class.attributes | length > 0 %}{% for a in class.attributes %}{{ a.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}) {
         {%- if class.attributes | length == 0 %}
         // no attributes
