@@ -103,7 +103,7 @@
           "initial_state": "Publish",
           "states": [
             {"name": "Publish"},
-            {"name": "Outstansing"},
+            {"name": "Outstanding"},
             {"name": "Lunas"},
             {"name": "Terlambat"},
             {"name": "Clear"}
