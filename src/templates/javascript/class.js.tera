@@ -1,15 +1,41 @@
 {%- include "state.js.tera" -%}
-export class {{ class.name }} {
+import { Registry } from './Runtime.js';
+import { Events } from './events.js';
+{# --- PRE-CALCULATION: Cari Parent Class --- #}
+{%- set parent_class = "" -%}
+{%- if associations is defined -%}
+    {%- for rel in associations -%}
+        {%- if rel.type == "generalization" -%}
+            {%- for sub in rel.subclasses -%}
+                {%- if sub == class.name -%}
+                    {%- set_global parent_class = rel.superclass -%}
+                {%- endif -%}
+            {%- endfor -%}
+        {%- endif -%}
+    {%- endfor -%}
+{%- endif -%}
+{%- if parent_class != "" -%}
+import {{ parent_class }} from './{{ parent_class }}.js';
+{%- endif %}
+
+{# --- CLASS DECLARATION --- #}
+export class {{ class.name }}{% if parent_class != "" %} extends {{ parent_class }}{% endif %} {
     {%- if class.domain_ref is defined and class.domain_ref %}
     // Domain Reference: {{ class.domain_ref }}
     {% endif %}
+
     /**
-     * @constructor
+     * @constructor
      {%- for a in class.attributes %}
-     * @param { {{ a.type }} } {{ a.name }}
+     * @param { {{ a.type | js_type }} } {{ a.name }}
      {%- endfor %}
-     */
+     */
     constructor({% if class.attributes | length > 0 %}{% for a in class.attributes %}{{ a.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}) {
+        {# --- CONSTRUCTOR LOGIC --- #}
+        {%- if parent_class != "" -%}
+        super(); 
+        {%- endif -%}
+
         {%- if class.attributes | length == 0 %}
         // no attributes
         {%- else %}
@@ -17,11 +43,13 @@ export class {{ class.name }} {
         this.{{ a.name }} = {{ a.name }};
         {%- endfor %}
         {%- endif %}
+        
         {%- if class.state_model is defined and class.state_model %}
         {%- set sm = class.state_model[0] %}
         this._state = {{ class.name }}State.{{ sm.initial_state }};
         {%- endif %}
     }
+
     {% if class.methods -%}
     {%- for m in class.methods %}
     {{ m.name }}() {
@@ -35,6 +63,11 @@ export class {{ class.name }} {
     }
     {% endfor -%}
     {% endif %}
+
+    {%- if associations is defined -%}
+        {%- include "associations.js.tera" -%}
+    {%- endif -%}
+
 {%- include "state_machine.js.tera" -%}
 {%- set evs = class_events -%}
 {%- for ev in evs %}

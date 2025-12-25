@@ -1,0 +1,55 @@
+const store = {};
+
+export class Registry {
+    
+    /**
+     * Mendaftarkan/Menyimpan objek baru ke sistem
+     * @param {string} className - Nama class (misal: 'User')
+     * @param {object} instance - Objek yang ingin disimpan
+     */
+    static add(className, instance) {
+        if (!store[className]) {
+            store[className] = [];
+        }
+        store[className].push(instance);
+        console.log(`[Registry] Added ${className}`);
+    }
+
+    /**
+     * Mencari BANYAK data (seperti SQL: SELECT * FROM ... WHERE ...)
+     * @param {string} className 
+     * @param {function} predicate - Fungsi filter (return true/false)
+     * @returns {Array} Array objek yang cocok
+     */
+    static findAll(className, predicate) {
+        const collection = store[className] || [];
+        if (!predicate) return collection; // Return semua jika tidak ada filter
+        return collection.filter(predicate);
+    }
+
+    /**
+     * Mencari SATU data (seperti SQL: SELECT ... LIMIT 1)
+     * @param {string} className 
+     * @param {function} predicate 
+     * @returns {object|null} Objek ketemu atau null
+     */
+    static findOne(className, predicate) {
+        const collection = store[className] || [];
+        return collection.find(predicate) || null;
+    }
+
+    /**
+     * Menghapus data (Opsional)
+     */
+    static remove(className, predicate) {
+        if (!store[className]) return;
+        store[className] = store[className].filter(item => !predicate(item));
+    }
+    
+    /**
+     * Debugging: Lihat isi database
+     */
+    static dump() {
+        console.log(JSON.stringify(store, null, 2));
+    }
+}

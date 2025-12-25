@@ -1,34 +1,25 @@
 {
   "model_name": "Toko Online",
-  "version": "1.0",
+  "version": "1.1",
   "domains": [
     {
-      "name": "UserOrder",
-      "description": "Sistem Order Produk"
-    },
-    {
-      "name": "UserPayment",
-      "description": "Sistem Pembawayan Order"
+      "name": "ECommerce",
+      "description": "Sistem Penjualan Online"
     }
   ],
   "classes": [
     {
       "name": "Customer",
-      "domain_ref": "UserOrder",
+      "domain_ref": "ECommerce",
       "attributes": [
         { "name": "id", "type": "int" },
         { "name": "name", "type": "str" },
-        { "name": "email", "type": "str" },
-        { "name": "registered_at", "type": "datetime" }
+        { "name": "email", "type": "str" }
       ],
       "methods": [
         {
-          "name": "get_order_history",
-          "body": "// Implies relationship: R1 'placed by' Customer(1) -> Order(M)\nreturn Orders.filter(o => o.customer_id === this.id);"
-        },
-        {
-          "name": "update_email",
-          "body": "this.email = new_email;\n// TODO: raise event CustomerEmailUpdated"
+          "name": "get_active_orders",
+          "body": "// Menggunakan R1 (Binary)\nreturn this.R1_Order_placed_by;"
         }
       ]
     },
@@ -38,48 +29,32 @@
         { "name": "id", "type": "int" },
         { "name": "customer_id", "type": "int" },
         { "name": "status", "type": "str" },
-        { "name": "created_at", "type": "datetime" },
         { "name": "total_amount", "type": "float" }
       ],
       "methods": [
         {
-          "name": "confirm_order",
-          "body": "this.status = 'confirmed';\n// TODO: raise event OrderConfirmed"
-        },
-        {
           "name": "calculate_total",
-          "body": "// Implies relationship: R2 'contains' Order(1) -> OrderItem(M)\nlet total = 0;\nconst items = OrderItems.filter(item => item.order_id === this.id);\n\nfor (const item of items) {\n  total += item.get_subtotal();\n}\n\nthis.total_amount = total;"
-        },
-        {
-          "name": "ship_order",
-          "body": "if (this.status === 'confirmed') {\n  this.status = 'shipped';\n  // TODO: raise event OrderShipped\n}"
+          "body": "// Menggunakan R2 (Linked/Associative)\nlet total = 0;\n// Kita akses OrderItem lewat R2\nconst items = this.R2_SideB_Product;\n// Logika iterasi..."
         }
       ],
       "state_model": [
         {
           "initial_state": "Created",
-          "states": [
-            { "name": "Created" },
-            { "name": "Confirmed" },
-            { "name": "Shipped" }
-          ],
+          "states": [ { "name": "Created" }, { "name": "Paid" } ],
           "transitions": [
-            {
-              "from": "Created",
-              "event": "OrderConfirmed",
-              "to": "Confirmed",
-              "action": "calculate_total()"
-            },
-            {
-              "from": "Confirmed",
-              "event": "OrderShipped",
-              "to": "Shipped",
-              "action": "notify_customer_shipping()"
-            }
+            { "from": "Created", "event": "PaymentSuccess", "to": "Paid", "action": "update_status()" }
           ]
         }
       ]
-
+    },
+    {
+      "name": "Product",
+      "attributes": [
+        { "name": "id", "type": "int" },
+        { "name": "category_id", "type": "int" },
+        { "name": "name", "type": "str" },
+        { "name": "price", "type": "float" }
+      ]
     },
     {
       "name": "OrderItem",
@@ -88,71 +63,102 @@
         { "name": "order_id", "type": "int" },
         { "name": "product_id", "type": "int" },
         { "name": "quantity", "type": "int" },
-        { "name": "price_per_unit", "type": "float" }
+        { "name": "final_price", "type": "float" }
+      ]
+    },
+    {
+      "name": "Category",
+      "attributes": [
+        { "name": "id", "type": "int" },
+        { "name": "parent_id", "type": "int" },
+        { "name": "name", "type": "str" }
       ],
       "methods": [
         {
-          "name": "get_subtotal",
-          "body": "return this.quantity * this.price_per_unit;"
-        },
-        {
-          "name": "get_product_name",
-          "body": "// Implies relationship: R3 'references' OrderItem(M) -> Product(1)\nconst product = Products.get({ id: this.product_id });\nreturn product.name;"
+          "name": "get_subcategories",
+          "body": "// Menggunakan R4 (Reflexive)\nreturn this.R4_Category_sub_kategori_dari;"
         }
       ]
     },
     {
-      "name": "Product",
+      "name": "Payment",
       "attributes": [
         { "name": "id", "type": "int" },
-        { "name": "sku", "type": "str" },
-        { "name": "name", "type": "str" },
-        { "name": "description", "type": "str" },
-        { "name": "price", "type": "float" }
-      ],
-      "methods": [
-        {
-          "name": "get_inventory_level",
-          "body": "// Implies relationship: R4 'has' Product(1) -> Inventory(1)\nconst inventory = Inventory.get({ product_id: this.id });\nreturn inventory.stock_level;"
-        },
-        {
-          "name": "update_price",
-          "body": "this.price = new_price;\n// TODO: raise event ProductPriceChanged"
-        }
-      ],
-      "state_model": []
+        { "name": "order_id", "type": "int" },
+        { "name": "amount", "type": "float" },
+        { "name": "date", "type": "datetime" }
+      ]
     },
     {
-      "name": "Inventory",
+      "name": "CreditCard",
       "attributes": [
-        { "name": "id", "type": "int" },
-        { "name": "product_id", "type": "int" },
-        { "name": "stock_level", "type": "int" },
-        { "name": "location", "type": "str" }
-      ],
-      "methods": [
-        {
-          "name": "decrement_stock",
-          "body": "if (this.stock_level >= amount) {\n  this.stock_level -= amount;\n\n  if (this.stock_level < 10) {\n    // TODO: raise event LowStockWarning\n  }\n} else {\n  // TODO: raise event OutOfStockError\n}"
-        },
-        {
-          "name": "increment_stock",
-          "body": "this.stock_level += amount;"
-        },
-        {
-          "name": "send_error_notification",
-          "body": "// select user where user equal to user"
-        }
-      ],
-      "state_model": []
+        { "name": "card_number", "type": "str" },
+        { "name": "cvv", "type": "str" }
+      ]
+    },
+    {
+      "name": "BankTransfer",
+      "attributes": [
+        { "name": "bank_name", "type": "str" },
+        { "name": "va_number", "type": "str" }
+      ]
     }
   ],
   "events": [
-    { "name": "OrderConfirmed", "trigger": "Order", "action": "status = 'confirmed'" },
-    { "name": "CustomerEmailUpdated", "trigger": "Customer", "action": "send_verification_email()" },
-    { "name": "OrderShipped", "trigger": "Order", "action": "notify_customer_shipping()" },
-    { "name": "ProductPriceChanged", "trigger": "Product", "action": "notify_wishlist_users()" },
-    { "name": "LowStockWarning", "trigger": "Inventory", "action": "create_purchase_order()" },
-    { "name": "OutOfStockError", "trigger": "Inventory", "action": "notify_sales_team(), send_error_notification()" }
+    { "name": "PaymentSuccess", "trigger": "Order", "action": "ship_items()" }
+  ],
+  "associations": [
+    {
+      "rel_id": "R1",
+      "type": "binary",
+      "side_a": {
+        "class": "Customer",
+        "mult": "1",
+        "phrase": "melakukan"
+      },
+      "side_b": {
+        "class": "Order",
+        "mult": "0..*",
+        "phrase": "dilakukan oleh"
+      }
+    },
+    {
+      "rel_id": "R2",
+      "type": "linked",
+      "side_a": {
+        "class": "Order",
+        "mult": "0..*",
+        "phrase": "berisi"
+      },
+      "side_b": {
+        "class": "Product",
+        "mult": "0..*",
+        "phrase": "termasuk dalam"
+      },
+      "link_class": "OrderItem"
+    },
+    {
+      "rel_id": "R3",
+      "type": "generalization",
+      "superclass": "Payment",
+      "subclasses": [
+        "CreditCard",
+        "BankTransfer"
+      ]
+    },
+    {
+      "rel_id": "R4",
+      "type": "binary",
+      "side_a": {
+        "class": "Category",
+        "mult": "0..1",
+        "phrase": "induk dari"
+      },
+      "side_b": {
+        "class": "Category",
+        "mult": "0..*",
+        "phrase": "sub kategori dari"
+      }
+    }
   ]
 }

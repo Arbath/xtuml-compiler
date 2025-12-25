@@ -1,0 +1,16 @@
+{%- macro js_type(t) -%}
+    {%- set type_lower = t | lower -%}
+    {%- if type_lower == "int" or type_lower == "integer" -%} number
+    {%- elif type_lower == "float" or type_lower == "real" or type_lower == "double" or type_lower == "decimal" -%} number
+    {%- elif type_lower == "bool" or type_lower == "boolean" -%} boolean
+    {%- elif type_lower == "str" or type_lower == "string" or type_lower == "text" or type_lower == "char" -%} string
+    {%- elif type_lower == "uuid" or type_lower == "unique_id" -%} string
+    {%- elif type_lower == "datetime" or type_lower == "timestamp" or type_lower == "date" -%} Date
+    {%- elif type_lower == "json" or type_lower == "map" or type_lower == "binary" -%} Object
+    {%- elif type_lower == "list" or type_lower == "array" or type_lower == "inst_ref_set" -%} Array
+    {%- elif type_lower == "obj" or type_lower == "inst_ref" -%} Object
+    {%- elif type_lower == "state" -%} string
+    {%- elif type_lower == "void" -%} void
+    {%- else -%} any
+    {%- endif -%}
+{%- endmacro -%}

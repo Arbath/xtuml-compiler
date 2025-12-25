@@ -1,0 +1,52 @@
+{%- for rel in associations -%}
+{%- if rel.type == "binary" or rel.type == "linked" -%}
+{%- if rel.side_a is defined and rel.side_a -%}
+{%- if rel.side_a.class == class.name -%}
+{%- set target = rel.side_b -%}
+{%- set role_phrase = target.phrase | replace(from=" ", to="_") %}
+    // Relasi {{ rel.rel_id }} ({{ rel.type | title }}): {{ class.name }} -> {{ target.class }}
+    get R{{ rel.rel_id | replace(from="R", to="") }}_{{ target.class }}_{{ role_phrase }}() {
+{%- if target.mult == "0..*" or target.mult == "1..*" %}
+        return Registry.findAll('{{ target.class }}', (item) => item.{{ class.name | lower }}_id === this.id);
+{%- else %}
+        return Registry.findOne('{{ target.class }}', (item) => item.{{ class.name | lower }}_id === this.id);
+{%- endif %}
+    }
+{% endif -%}
+{%- if rel.side_b.class == class.name -%}
+{%- set target = rel.side_a -%}
+{%- set role_phrase = target.phrase | replace(from=" ", to="_") %}
+    // Relasi {{ rel.rel_id }} ({{ rel.type | title }}): {{ class.name }} -> {{ target.class }}
+    get R{{ rel.rel_id | replace(from="R", to="") }}_{{ target.class }}_{{ role_phrase }}() {
+{%- if target.mult == "0..*" or target.mult == "1..*" %}
+        return Registry.findAll('{{ target.class }}', (item) => this.{{ target.class | lower }}_id === item.id);
+{%- else %}
+        return Registry.findOne('{{ target.class }}', (item) => item.id === this.{{ target.class | lower }}_id);
+{%- endif %}
+    }
+{%- endif -%}
+{%- endif -%}
+{%- if rel.type == "linked" and rel.link_class is defined and rel.link_class == class.name %}
+    // Relasi {{ rel.rel_id }} (Link Class): Menghubungkan {{ rel.side_a.class }} & {{ rel.side_b.class }}
+    get R{{ rel.rel_id | replace(from="R", to="") }}_{{ rel.side_a.class }}() {
+        return Registry.findOne('{{ rel.side_a.class }}', (i) => i.id === this.{{ rel.side_a.class | lower }}_id);
+    }
+    get R{{ rel.rel_id | replace(from="R", to="") }}_{{ rel.side_b.class }}() {
+        return Registry.findOne('{{ rel.side_b.class }}', (i) => i.id === this.{{ rel.side_b.class | lower }}_id);
+    }
+{%- endif -%}
+{%- elif rel.type == "generalization" -%}
+{%- if rel.superclass == class.name %}
+    // Relasi {{ rel.rel_id }} (Generalization): Akses ke Subclasses
+    get R{{ rel.rel_id | replace(from="R", to="") }}_Subclasses() {
+        return [
+{%- for sub in rel.subclasses -%}
+...Registry.findAll('{{ sub }}'),
+{%- endfor -%}
+];
+    }
+{%- endif -%}
+
+{%- endif -%}
+
+{%- endfor -%}

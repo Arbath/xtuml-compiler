@@ -53,31 +53,6 @@ fn main() -> Result<()> {
         }
     }
 
-    let ext = extension_for(&args.lang);
-    let safe_name: String = model.model_name
-        .chars()
-        .map(|c| if c.is_alphanumeric() { c } else { '_' })
-        .collect();
-
-    let filename = format!("{}_model.{}", safe_name, ext);
-
-    println!("Generation complete. \nOutput in: \n{}/{}", args.out.display(), filename);
+    println!("\nGeneration complete. \nOutput in: {}", args.out.display());
     Ok(())
-}
-
-fn extension_for(lang: &str) -> &str {
-    match lang {
-        "python" => "py",
-        "javascript" => "js",
-        "typescript" => "ts",
-        "c" => "c",
-        "java" => "java",
-        "php" => "php",
-        "golang" => "go",
-        "swift" => "swift",
-        "rust" => "rs",
-        "ruby" => "rb",
-        "csharp" => "cs",
-        _ => "txt", // fallback
-    }
 }

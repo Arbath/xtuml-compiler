@@ -13,6 +13,8 @@ pub struct Model {
     pub classes: Vec<ClassDef>,
     #[serde(default)]
     pub events: Vec<EventDef>,
+    #[serde(default)]
+    pub associations: Vec<Association>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -75,6 +77,26 @@ pub struct Transition {
     pub event: String,
     pub to: String,
     pub action: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Association {
+    pub rel_id: String,
+    #[serde(rename = "type")]
+    pub ty: String, 
+    pub side_a: Option<AssociationSide>,
+    pub side_b: Option<AssociationSide>,
+    pub link_class: Option<String>,
+    pub superclass: Option<String>,
+    #[serde(default)]
+    pub subclasses: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct AssociationSide {
+    pub class: String,
+    pub mult: String,
+    pub phrase: String,
 }
 
 
