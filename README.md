@@ -3,6 +3,7 @@
 Compiler berbasis **Rust** untuk menerjemahkan model **xtUML (Executable UML)** dari format **JSON** menjadi kode sumber dalam berbagai bahasa pemrograman seperti **Python**, **Java**, dan **Javascript**.
 
 ---
+### Link Update Proyek : [Github Arbath](https://github.com/Arbath/xtuml-compiler)
 
 ## Tujuan Proyek
 
